@@ -5,7 +5,7 @@ from og import load_model_weights
 import os
 import math
 
-def split_image_into_tiles(image, tile_size=256, overlap=3):
+def split_image_into_tiles(image, tile_size=512, overlap=3):
     """
     Split a large image into tiles with optional overlap.
     
@@ -60,7 +60,7 @@ def predict_tile_road_mask(model, tile):
     
     return predicted_mask
 
-def process_large_image(model, image_path, tile_size=256, overlap=32):
+def process_large_image(model, image_path, tile_size = 512 , overlap=32):
     """
     Process large image by splitting it into tiles, running predictions, and stitching results.
     """
@@ -184,12 +184,12 @@ def save_results(composite_image, old_roads, new_roads, change_overlay, output_d
                 cv2.cvtColor(change_overlay, cv2.COLOR_RGB2BGR))
 
 def main():
-    MODEL_PATH = 'models/roads_extraction.h5'
-    IMAGE1_PATH = '/home/peddu/Desktop/road-extraction/old.jpg'
-    IMAGE2_PATH = '/home/peddu/Desktop/road-extraction/new.jpg'
+    MODEL_PATH = 'models/save_best.h5'
+    IMAGE1_PATH = '/home/peddu/final/RoadExtraction/dl_model/images/2022.jpg'
+    IMAGE2_PATH = '/home/peddu/final/RoadExtraction/dl_model/images/2025.jpg'
     
-    TILE_SIZE = 512
-    OVERLAP = 64
+    TILE_SIZE = 1024
+    OVERLAP = 32
     
     print("Loading model...")
     model = load_model_weights(MODEL_PATH)
