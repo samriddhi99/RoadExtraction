@@ -173,7 +173,7 @@ def process_single_image(model, image_path, output_dir='results', tile_size=256,
 
 def main():
     MODEL_PATH = 'models/roads_extraction.h5'
-    IMAGE_PATH = '/home/peddu/Desktop/road-extraction/liss4_image.jpg'
+    IMAGE_PATH = '/home/peddu/final/RoadExtraction/dl_model/images/with_roads.jpg'
     
     TILE_SIZE = 512
     OVERLAP = 32
