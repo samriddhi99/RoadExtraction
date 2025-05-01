@@ -4,17 +4,17 @@ from models.user import User
 from models.location import Location
 from models.permission_request import PermissionRequest
 from models.notification import Notification
-from utils.nlp import process_query  # We'll pretend this exists
+from utils.nlp import process_query  
 
 from sqlalchemy.orm import Session
 
-# All functions will take in a db session now
+
 
 def get_accessible_locations(db: Session, user_id: str):
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
         return []
-    return user.accessible_locations  # Assuming a relationship exists
+    return user.accessible_locations  
 
 def request_permission(db: Session, user_id: str, request_data: dict):
     permission = PermissionRequest(
@@ -29,7 +29,7 @@ def request_permission(db: Session, user_id: str, request_data: dict):
     return {"message": "Permission request submitted", "request_id": permission.id}
 
 def search_location(db: Session, user_id: str, query: str):
-    # Pass query through NLP model to get interpreted result
+    
     sql_query = process_query(query)
     
     # Execute the interpreted query manually
@@ -46,3 +46,4 @@ def get_notifications(db: Session, user_id: str):
             "image_url": notif.image_url
         })
     return notif_list
+
