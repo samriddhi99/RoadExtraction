@@ -14,3 +14,4 @@ class Notification(Base):
     metadata = Column(String, nullable=True)
     image_url = Column(String, nullable=True)  # or store actual image in S3 and just link here
     created_at = Column(DateTime, default=datetime.utcnow)
+
