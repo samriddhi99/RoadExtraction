@@ -202,6 +202,38 @@ const Signup: React.FC = () => {
     }
   };
 
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/api/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      setFormErrors({
+        ...formErrors,
+        serverError: errorData.error || 'An error occurred while processing your request.',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const data = await response.json();
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    // Optionally, handle success, like redirecting to login or showing a success message
+  } catch (error) {
+    setFormErrors({
+      ...formErrors,
+      serverError: 'Network error or server is down',
+    });
+    setIsSubmitting(false);
+  }
+};
   const renderStep1 = () => (
     <div className="space-y-4">
       <div>

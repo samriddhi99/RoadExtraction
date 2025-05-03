@@ -1,43 +1,51 @@
-from app.db import get_db
-from datetime import datetime
+import mysql.connector
+from mysql.connector import Error
 
-def register_user(data):
-    username = data.get('username')
-    email = data.get('email')
-    role = data.get('role', 'user')
-    location_ids = data.get('location_ids', [])
 
-    if not username or not email:
-        return {'error': 'Username and email are required'}, 400
-
-    db = get_db()
-    cursor = db.cursor()
-
+def create_user(data):
     try:
-        # Insert into users
-        insert_user = """
-            INSERT INTO users (username, email, role, created_at)
-            VALUES (%s, %s, %s, %s)
-        """
-        cursor.execute(insert_user, (username, email, role, datetime.utcnow()))
-        user_id = cursor.lastrowid
+        connection = mysql.connector.connect(
+            host='localhost',
+            database='change_detection',
+            user='root',
+            password='root'
+        )
 
-        # Insert into user_locations if locations provided
-        if location_ids:
-            insert_access = """
-                INSERT INTO user_locations (user_id, location_id)
-                VALUES (%s, %s)
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            insert_query = """
+                INSERT INTO users (
+                    full_name, email, phone_number, role,
+                    designation, department, username, password,
+                    regions, access_reason, supervisor_contact,
+                    terms_agreed, confidentiality_agreed
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            access_data = [(user_id, loc_id) for loc_id in location_ids]
-            cursor.executemany(insert_access, access_data)
 
-        db.commit()
-        return {'message': 'User registered successfully', 'user_id': user_id}, 201
+            cursor.execute(insert_query, (
+                data['fullName'],
+                data['email'],
+                data['phoneNumber'],
+                data['role'],
+                data['designation'],
+                data['department'],
+                data['username'],
+                (data['password']),  # safe hash
+                ','.join(data['regions']),  # store regions as CSV
+                data['accessReason'],
+                data['supervisorContact'],
+                data['termsAgreed'],
+                data['confidentialityAgreed']
+            ))
 
-    except Exception as e:
-        db.rollback()
-        return {'error': str(e)}, 500
+            connection.commit()
+            print("[+] User created successfully")
+
+    except Error as e:
+        print(f"[!] MySQL Error: {e}")
 
     finally:
-        cursor.close()
-        db.close()
+        if connection.is_connected():
+            cursor.close()
+            connection.close()

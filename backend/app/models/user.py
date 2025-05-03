@@ -1,7 +1,7 @@
 #admin, user classes
 from sqlalchemy import Column, Integer, String
-from app.models import Base
-
+from sqlalchemy.ext.declarative import declarative_base
+Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
 

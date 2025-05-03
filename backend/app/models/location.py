@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
-from app.models import Base
+from models import Base
 from datetime import datetime
 
-class LocationRequest(Base):
+class Location(Base):
     __tablename__ = 'location_requests'
 
     id = Column(Integer, primary_key=True)
