@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, AlertCircle, X } from 'lucide-react';
+import axios from 'axios';
+
 
 interface FormData {
   // Step 1: Basic User Details
@@ -177,63 +179,61 @@ const Signup: React.FC = () => {
   const prevStep = () => {
     setCurrentStep(prev => prev - 1);
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+  
     if (!formData.termsAgreed) {
       setFormErrors(prev => ({ ...prev, termsAgreed: 'You must agree to the Terms and Conditions' }));
       return;
     }
-    
+  
     if (!formData.confidentialityAgreed) {
       setFormErrors(prev => ({ ...prev, confidentialityAgreed: 'You must agree to the Data Confidentiality Agreement' }));
       return;
     }
-    
+  
     if (validateStep(3)) {
       setIsSubmitting(true);
-      
-      setTimeout(() => {
-        console.log('Form submitted:', formData);
+  
+      try {
+        const submissionData = new FormData();
+  
+        Object.entries(formData).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            value.forEach(v => submissionData.append(`${key}[]`, v));
+          } else if (value instanceof File) {
+            if (value !== null) {
+              submissionData.append(key, value);
+            }
+          } else {
+            submissionData.append(key, String(value));
+          }
+        });
+        
+  
+
+        const response = await axios.post('"http://localhost:5000/api/auth/signup', submissionData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+  
+        if (response.status === 200) {
+          setIsSubmitted(true);
+        } else {
+          alert('Submission failed. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('An error occurred while submitting the form.');
+      } finally {
         setIsSubmitting(false);
-        setIsSubmitted(true);
-      }, 1500);
+      }
     }
   };
+        
+  
 
-
-  try {
-    const response = await fetch('http://127.0.0.1:5000/api/auth/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      setFormErrors({
-        ...formErrors,
-        serverError: errorData.error || 'An error occurred while processing your request.',
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    const data = await response.json();
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    // Optionally, handle success, like redirecting to login or showing a success message
-  } catch (error) {
-    setFormErrors({
-      ...formErrors,
-      serverError: 'Network error or server is down',
-    });
-    setIsSubmitting(false);
-  }
-};
   const renderStep1 = () => (
     <div className="space-y-4">
       <div>
