@@ -35,7 +35,7 @@ def get_accessible_locations(user_id):
             conn.close()
 
 
-def request_permission(user_id, request_data):
+def register_request(user_id, request_data):
     try:
         conn = connect_db()
         cursor = conn.cursor()

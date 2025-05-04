@@ -212,7 +212,7 @@ const Signup: React.FC = () => {
         
   
 
-        const response = await axios.post('"http://localhost:5000/api/auth/signup', submissionData, {
+        const response = await axios.post("http://localhost:5000/api/auth/signup", submissionData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

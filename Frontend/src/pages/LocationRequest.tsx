@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MapPin, Check, AlertCircle, X } from 'lucide-react';
+import axios from 'axios';
 
 interface FormData {
   fullName: string;
@@ -81,23 +82,35 @@ const LocationRequest: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+ 
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!validateForm()) return;
+
+  setIsSubmitting(true);
+
+  try {
+    const response = await axios.post("http://localhost:5000/api/request-access", formData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.status === 200) {
       setIsSubmitted(true);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      alert('Submission failed. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    alert('An error occurred while submitting the form.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   if (isSubmitted) {
     return (

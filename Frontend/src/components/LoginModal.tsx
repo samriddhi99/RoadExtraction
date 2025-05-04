@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Mail, Lock, ChevronRight, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import axios from 'axios';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -16,31 +17,48 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const { login } = useUser();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+  
     if (role === 'Admin' && !email.endsWith('@admin.roadmonitor.in')) {
       setError('Admin accounts must use an @admin.roadmonitor.in email');
       return;
     }
-
+  
     if (role === 'user' && !email.endsWith('@roadmonitor.in')) {
       setError('User accounts must use an @roadmonitor.in email');
       return;
     }
-
+  
     const userName = email.split('@')[0];
-    login(userName, email, role);
-
-    if (role === 'Admin') {
-      navigate('/admin');
-    } else {
-      navigate('/index');
+  
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email: email,
+        role: role,
+        password: password, 
+      });
+  
+      if (response.status === 200) {
+        login(userName, email, role);
+  
+        if (role === 'Admin') {
+          navigate('/admin');
+        } else {
+          navigate('/index');
+        }
+  
+        onClose();
+      } else {
+        alert('Login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      setError('An error occurred while logging in.');
     }
-
-    onClose();
   };
+  
 
   if (!isOpen) return null;
 

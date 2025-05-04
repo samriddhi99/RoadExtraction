@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
         <Link to="/about" className="text-dark-slate hover:text-forest-green">
           About
         </Link>
-        <Link to="/contact" cla      ssName="text-dark-slate hover:text-forest-green">
+        <Link to="/contact" className="text-dark-slate hover:text-forest-green">
           Contact
         </Link>
 
