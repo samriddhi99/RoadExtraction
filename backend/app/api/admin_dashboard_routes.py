@@ -6,6 +6,7 @@ admin_bp = Blueprint("admin", __name__)
 
 @admin_bp.route("/access-requests", methods=["GET"])
 def list_requests():
+    print("[+] Access requests route hit")
     requests = get_access_requests()
     return jsonify(requests), 200
 
