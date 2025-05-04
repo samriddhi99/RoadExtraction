@@ -63,11 +63,12 @@ def login_user(data):
             cursor = connection.cursor()
 
             select_query = """
-                SELECT * FROM users WHERE username = %s AND password = %s"""
+                SELECT * FROM users WHERE email = %s AND password = %s"""
             cursor.execute(select_query, (
-                data.get('username'),
+                data.get('email'),
                 (data.get('password')),  # safe hash
             ))
+            print("Data:", data.get('email'), (data.get('password')))
             result = cursor.fetchone()
             if result:
                 print("[+] User logged in successfully")

@@ -35,21 +35,32 @@ def get_accessible_locations(user_id):
             conn.close()
 
 
-def register_request(user_id, request_data):
+def register_request(request_data):
+    print("[+] Registering permission request...")
     try:
         conn = connect_db()
         cursor = conn.cursor()
 
         insert_query = """
-            INSERT INTO permission_requests (user_id, area, reason, status)
-            VALUES (%s, %s, %s, %s)
+        INSERT INTO permission_requests (
+        full_name, email, phone_number, department, designation,
+        locations, justification, supervisor_info, additional_comments
+    )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
+        # Assuming request_data is a dictionary with the required fields
         cursor.execute(insert_query, (
-            user_id,
-            request_data.get("area"),
-            request_data.get("reason"),
-            "pending"
+            request_data.get("fullName"),
+            request_data.get("email"),
+            request_data.get("phoneNumber"),
+            request_data.get("department"),
+            request_data.get("designation"),
+            ",".join(request_data.get("locations", [])),  # flatten list to comma-separated string
+            request_data.get("justification"),
+            request_data.get("supervisorInfo"),
+            request_data.get("additionalComments")
         ))
+
 
         conn.commit()
         return {
@@ -91,7 +102,7 @@ def get_notifications(user_id):
         conn = connect_db()
         cursor = conn.cursor(dictionary=True)
 
-        query = "SELECT change_detected, metadata, image_url FROM notifications WHERE user_id = %s"
+        query = "SELECT * FROM notifications WHERE id = %s"
         cursor.execute(query, (user_id,))
         return cursor.fetchall()
 

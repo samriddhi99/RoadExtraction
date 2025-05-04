@@ -2,33 +2,37 @@
 #send notifications to the frontend from model
 
 from flask import Blueprint, request, jsonify
-
-auth_bp = Blueprint('auth', __name__)
-
+from flask_cors import cross_origin
+user_bp = Blueprint('user', __name__)
+print("user_dashboard_routes.py loaded!")
 # Assuming you have this function defined somewhere
 from services.user_service import register_request  
+from services.user_service import get_notifications
+# At top with imports
 
-@auth_bp.route('/api/request-access', methods=['POST'])
+@user_bp.route('/request-access', methods=['POST', 'OPTIONS'])
+@cross_origin()
 def request_access():
+    print("[+] Request route hit")
+    if request.method == "OPTIONS":
+        return '', 200
     try:
+        print("[+] Request route hit")
         data = request.get_json()
-
-        required_fields = [
-            "fullName", "email", "phoneNumber", "department", "designation",
-            "locations", "justification", "duration", "supervisorInfo",
-            "additionalComments", "termsAgreed", "confidentialityAgreed"
-        ]
-
-        # Basic validation to make sure nothing essential is missing
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return jsonify({'error': f'Missing fields: {", ".join(missing_fields)}'}), 400
-
-        # Call your backend function to handle this request
         register_request(data)
 
         return jsonify({'message': 'Request submitted successfully'}), 200
 
     except Exception as e:
         print("Error handling request:", e)
+        return jsonify({'error': 'Internal server error'}), 500
+
+@user_bp.route('/notifications', methods=['GET'])
+@cross_origin()
+def fetch_notifications():
+    try:
+        notifications = get_notifications()  # returns a list of dicts
+        return jsonify(notifications), 200
+    except Exception as e:
+        print("Error fetching notifications:", e)
         return jsonify({'error': 'Internal server error'}), 500
