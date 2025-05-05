@@ -17,6 +17,8 @@ def get_access_requests():
         query = "SELECT id, full_name, department, locations, submitted_at, status FROM permission_requests WHERE status = 'pending'"
         cursor.execute(query)
         requests = cursor.fetchall()
+        for d in requests:
+            d["submitted_at"] = d["submitted_at"].strftime("%Y-%m-%d %H:%M:%S")
         print(requests)
         return requests
     except Error as e:
@@ -28,13 +30,18 @@ def get_access_requests():
             conn.close()
 
 
-def get_user_access_data(user_id):
+def get_user_access_data():
     try:
         conn = connect_db()
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT * FROM permission_requests WHERE id = %s"
-        cursor.execute(query, (user_id,))
+        query = "SELECT full_name, status, submitted_at FROM permission_requests WHERE status = 'approved'"
+        cursor.execute(query)
         user_requests = cursor.fetchall()
+        print("[+] USer access data returned")
+        for d in user_requests:
+            d["submitted_at"] = d["submitted_at"].strftime("%Y-%m-%d %H:%M:%S")
+
+        print(user_requests)
         return user_requests
     except Error as e:
         print("Error fetching user access data:", e)
@@ -48,7 +55,7 @@ def update_request_status(request_id, new_status):
     try:
         conn = connect_db()
         cursor = conn.cursor()
-        query = "UPDATE access_requests SET status = %s WHERE id = %s"
+        query = "UPDATE permission_requests SET status = %s WHERE id = %s"
         cursor.execute(query, (new_status, request_id))
         conn.commit()
         return True
@@ -68,17 +75,15 @@ def grant_access_to_user(request_id):
         query = "SELECT * FROM permission_requests WHERE id = %s"
         cursor.execute(query, (request_id,))
         request_data = cursor.fetchone()
-
+        print("[+] Request data fetched")
+        print(request_data)
         if not request_data:
             print("Request not found")
             return False
 
-        # Extract user details from the request
-        user_id = request_data[1]  # Assuming user_id is in the second column
-        locations = request_data[6]  # Assuming locations are in the seventh column
-
-        # Update the user's accessible locations
-        update_query = "UPDATE users SET accessible_locations = %s WHERE user_id = %s"
+        user_id = request_data[1] 
+        locations = request_data[6]  
+        update_query = "UPDATE users SET regions = %s WHERE username = %s"
         cursor.execute(update_query, (locations, user_id))
         
         # Update the request status to 'approved'

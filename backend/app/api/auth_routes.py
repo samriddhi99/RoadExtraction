@@ -23,7 +23,7 @@ def login():
     data = request.get_json()
     try:
         login_user(data)  # this function will handle everything except file stuff
-        return jsonify({"message": "User created successfully"}), 200
+        return jsonify({"message": "User logged in successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     return jsonify({'message': 'Login successful', 'role': 'user'}), 200

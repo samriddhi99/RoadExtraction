@@ -8,12 +8,13 @@ admin_bp = Blueprint("admin", __name__)
 def list_requests():
     print("[+] Access requests route hit")
     requests = get_access_requests()
-    return jsonify(requests), 200
-
-@admin_bp.route("/user-access", methods=["GET"])
-def list_user_access():
     access_data = get_user_access_data()
-    return jsonify(access_data), 200
+
+    j = jsonify({"accessRequests":requests, "userAccesses":access_data})
+    print(j)
+    return j, 200
+
+
 
 @admin_bp.route("/approve/<request_id>", methods=["POST"])
 def approve_request(request_id):

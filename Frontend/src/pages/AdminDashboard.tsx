@@ -2,72 +2,61 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { 
-  Users, 
-  AlertTriangle, 
-  Map, 
-  Clock, 
-  Settings,
-  Check,
-  X,
-  ChevronRight,
-  Search
+  Check, 
+  X, 
+  Search 
 } from 'lucide-react';
 
 interface AccessRequest {
-  id: string;
-  userName: string;
+  id: number;
+  full_name: string;  // Changed to match the API response
   department: string;
-  requestedRegions: string[];
-  date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  locations: string;  // Ensure that locations are properly handled as a string
+  submitted_at: string;  // Date will be a string for easier formatting
+  status: string;
+ // Adjusted for array of regions
 }
 
 interface UserAccess {
-  userName: string;
-  email: string;
-  regions: string[];
-  lastAccessed: string;
+  full_name: string;
+  status: string;
+  submitted_at: string;  // Same as above, handle this as string for formatting
 }
-
-const mockAccessRequests: AccessRequest[] = [
-  {
-    id: '1',
-    userName: 'John Smith',
-    department: 'Transportation',
-    requestedRegions: ['North Region', 'Central Region'],
-    date: '2024-03-15',
-    status: 'pending'
-  },
-  {
-    id: '2',
-    userName: 'Sarah Johnson',
-    department: 'Urban Planning',
-    requestedRegions: ['South Region'],
-    date: '2024-03-14',
-    status: 'approved'
-  }
-];
-
-const mockUserAccess: UserAccess[] = [
-  {
-    userName: 'John Smith',
-    email: 'john.smith@transport.gov',
-    regions: ['North Region', 'Central Region'],
-    lastAccessed: '2024-03-15 14:30'
-  },
-  {
-    userName: 'Sarah Johnson',
-    email: 'sarah.j@planning.gov',
-    regions: ['South Region'],
-    lastAccessed: '2024-03-14 09:15'
-  }
-];
 
 const AdminDashboard: React.FC = () => {
   const { isLoggedIn, isAdmin } = useUser();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'requests' | 'access'>('requests');
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
+  const [userAccesses, setUserAccesses] = useState<UserAccess[]>([]);
+
+  // Fetch data from the backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/admin/access-requests", {  
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const jsonData = await response.json();
+        console.log(jsonData); // Debugging line
+        setAccessRequests(jsonData.accessRequests);
+        setUserAccesses(jsonData.userAccesses);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn || !isAdmin()) {
@@ -75,25 +64,57 @@ const AdminDashboard: React.FC = () => {
     }
   }, [isLoggedIn, isAdmin, navigate]);
 
-  const filteredRequests = mockAccessRequests.filter(request =>
-    request.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredRequests = accessRequests.filter(request =>
+    request.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Updated from userName to full_name
     request.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredUserAccess = mockUserAccess.filter(user =>
-    user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUserAccess = userAccesses.filter(user =>
+    user.full_name.toString().includes(searchTerm.toLowerCase()) || // Fix matching searchTerm with the user_id
+    user.status.toLowerCase().includes(searchTerm.toLowerCase()) 
   );
 
-  const handleApprove = (requestId: string) => {
-    // Handle approval logic
-    console.log('Approved request:', requestId);
-  };
+  const handleApprove = async (requestId: number) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/approve/${requestId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) throw new Error("Failed to approve request");
+  
+      const data = await response.json();
+      console.log(data.message); // "Request approved"
 
-  const handleReject = (requestId: string) => {
-    // Handle rejection logic
-    console.log('Rejected request:', requestId);
+      
+    } catch (error) {
+      console.error("Approval error:", error);
+    }
   };
+  
+  const handleReject = async (requestId: number) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/admin/reject/${requestId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) throw new Error("Failed to reject request");
+  
+      const data = await response.json();
+      console.log(data.message); // "Request rejected"
+  
+      // Optionally: refresh data
+       // or re-call fetchData()
+    } catch (error) {
+      console.error("Rejection error:", error);
+    }
+  };
+  
 
   return (
     <div className="min-h-screen bg-cream p-6">
@@ -113,7 +134,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-forest-green">Pending Requests</h3>
               <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
-                {mockAccessRequests.filter(r => r.status === 'pending').length}
+                {accessRequests.filter(r => r.status === 'pending').length}
               </div>
             </div>
           </div>
@@ -122,7 +143,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-forest-green">Active Users</h3>
               <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                {mockUserAccess.length}
+                {userAccesses.length}
               </div>
             </div>
           </div>
@@ -131,7 +152,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-forest-green">Total Regions</h3>
               <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                6
+                
               </div>
             </div>
           </div>
@@ -209,18 +230,9 @@ const AdminDashboard: React.FC = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRequests.map((request) => (
                       <tr key={request.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {request.userName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {request.department}
-                        </td>
-                        <td className="px-6 py-4">
-                          {request.requestedRegions.join(', ')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {request.date}
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">{request.full_name}</td> {/* Updated from userName */}
+                        <td className="px-6 py-4 whitespace-nowrap">{request.department}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{request.submitted_at}</td> {/* Handle date properly */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                             request.status === 'pending'
@@ -236,13 +248,13 @@ const AdminDashboard: React.FC = () => {
                           {request.status === 'pending' && (
                             <div className="flex space-x-2">
                               <button
-                                onClick={() => handleApprove(request.id)}
+                                onClick={() => handleApprove(request.id)}  // Fixed type issue
                                 className="text-green-600 hover:text-green-900"
                               >
                                 <Check size={18} />
                               </button>
                               <button
-                                onClick={() => handleReject(request.id)}
+                                onClick={() => handleReject(request.id)}  // Fixed type issue
                                 className="text-red-600 hover:text-red-900"
                               >
                                 <X size={18} />
@@ -277,18 +289,10 @@ const AdminDashboard: React.FC = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredUserAccess.map((user, index) => (
                       <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {user.userName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4">
-                          {user.regions.join(', ')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {user.lastAccessed}
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.full_name}</td> {/* Handling user_id correctly */}
+                        <td className="px-6 py-4 whitespace-nowrap">{user.status}</td> {/* Corrected */}
+                        <td className="px-6 py-4">{user.status}</td> {/* Replace with actual regions data */}
+                        <td className="px-6 py-4">{user.submitted_at}</td> {/* Format as necessary */}
                       </tr>
                     ))}
                   </tbody>
