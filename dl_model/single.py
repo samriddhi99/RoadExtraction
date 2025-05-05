@@ -1,22 +1,14 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from og import load_model_weights
+from dl_model.architecture import load_model_weights
 import os
 import math
 
+
+
 def split_image_into_tiles(image, tile_size=256, overlap=3):
-    """
-    Split a large image into tiles with optional overlap.
-    
-    Args:
-        image: Input large image
-        tile_size: Size of each tile
-        overlap: Overlap between adjacent tiles to avoid edge artifacts
-        
-    Returns:
-        List of tiles and their positions (tile, x, y)
-    """
+
     height, width = image.shape[:2]
     tiles = []
     
@@ -171,14 +163,14 @@ def process_single_image(model, image_path, output_dir='results', tile_size=256,
     
     save_road_detection_results(original_image, road_mask, overlay_image, output_dir)
 
-def main():
+"""def main():
     MODEL_PATH = 'models/roads_extraction.h5'
     IMAGE_PATH = '/home/peddu/final/RoadExtraction/dl_model/images/with_roads.jpg'
     
     TILE_SIZE = 512
     OVERLAP = 32
     
-    OUTPUT_DIR = 'road_detection_results'
+    OUTPUT_DIR = 'dl_model/results'
     
     print("Loading model...")
     model = load_model_weights(MODEL_PATH)
@@ -188,4 +180,4 @@ def main():
     print("Road detection completed.")
 
 if __name__ == "__main__":
-    main()
+    main()"""

@@ -1,22 +1,12 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from og import load_model_weights
+from dl_model.architecture import load_model_weights
 import os
 import math
 
 def split_image_into_tiles(image, tile_size=512, overlap=3):
-    """
-    Split a large image into tiles with optional overlap.
     
-    Args:
-        image: Input large image
-        tile_size: Size of each tile
-        overlap: Overlap between adjacent tiles to avoid edge artifacts
-        
-    Returns:
-        List of tiles and their positions (tile, x, y)
-    """
     height, width = image.shape[:2]
     tiles = []
     
@@ -183,7 +173,7 @@ def save_results(composite_image, old_roads, new_roads, change_overlay, output_d
     cv2.imwrite(os.path.join(output_dir, 'road_changes_overlay.jpg'), 
                 cv2.cvtColor(change_overlay, cv2.COLOR_RGB2BGR))
 
-def main():
+"""def main():
     MODEL_PATH = 'models/save_best.h5'
     IMAGE1_PATH = '/home/peddu/final/RoadExtraction/dl_model/images/2022.jpg'
     IMAGE2_PATH = '/home/peddu/final/RoadExtraction/dl_model/images/2025.jpg'
@@ -208,4 +198,4 @@ def main():
     print("Road change detection completed. Results saved to 'results' folder.")
 
 if __name__ == "__main__":
-    main()
+    main()"""
