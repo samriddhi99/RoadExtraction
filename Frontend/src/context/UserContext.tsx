@@ -11,7 +11,8 @@ interface UserContextType {
   isAdmin: () => boolean;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+// ✅ Export the context directly
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -44,9 +45,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// ✅ Optional hook to access context
 export const useUser = (): UserContextType => {
   const context = useContext(UserContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
