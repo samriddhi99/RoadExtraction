@@ -169,17 +169,25 @@ def process_large_image(model, image_path, tile_size=512, overlap=32):
     
     return original_image, full_mask, overlay_image
 
-def connect_roads_with_thinning(road_mask, max_gap=20):
+def connect_roads_with_thinning(road_mask, max_gap=20, max_border_pts=100, n_threads=16):
     """
-    Connect road segments using morphological operations and line drawing
+    Connect road segments using morphological operations and line drawing - parallelized version
     
     Args:
         road_mask: Binary road mask
         max_gap: Maximum gap to bridge between endpoints
+        max_border_pts: Maximum number of border points to sample per component
+        n_threads: Number of CPU threads to use for parallel processing
         
     Returns:
         Connected road mask
     """
+    import numpy as np
+    import cv2
+    from scipy.spatial import cKDTree
+    from multiprocessing import Pool
+    from itertools import combinations
+    
     # Convert to uint8
     mask = road_mask.astype(np.uint8) * 255
     
@@ -190,57 +198,77 @@ def connect_roads_with_thinning(road_mask, max_gap=20):
     # Identify remaining disconnected components
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_closed, connectivity=8)
     
+    # Pre-compute all border pixels for each component
+    component_borders = []
+    for i in range(1, num_labels):
+        component = (labels == i).astype(np.uint8)
+        eroded = cv2.erode(component, kernel_small, iterations=1)
+        border = np.logical_and(component, np.logical_not(eroded))
+        border_coords = np.column_stack(np.where(border))
+        
+        # Sample border points if there are too many
+        if len(border_coords) > max_border_pts:
+            indices = np.random.choice(len(border_coords), max_border_pts, replace=False)
+            border_coords = border_coords[indices]
+            
+        component_borders.append(border_coords)
+    
+    # Function to find connection between two components
+    def find_connection(pair):
+        i, j = pair
+        border_i = component_borders[i]
+        border_j = component_borders[j]
+        
+        # Skip if either has no border pixels
+        if len(border_i) == 0 or len(border_j) == 0:
+            return None
+            
+        # Build KD-tree for the smaller set
+        if len(border_i) <= len(border_j):
+            tree = cKDTree(border_i)
+            query_points = border_j
+            i_smaller = True
+        else:
+            tree = cKDTree(border_j)
+            query_points = border_i
+            i_smaller = False
+            
+        # Find the closest pairs efficiently
+        distances, indices = tree.query(query_points, k=1, distance_upper_bound=max_gap+1)
+        
+        # Find the minimum distance
+        if distances.size > 0 and np.min(distances) <= max_gap:
+            min_idx = np.argmin(distances)
+            min_dist = distances[min_idx]
+            
+            if min_dist <= max_gap:
+                # Get coordinates
+                if i_smaller:
+                    y1, x1 = border_i[indices[min_idx]]
+                    y2, x2 = border_j[min_idx]
+                else:
+                    y1, x1 = border_i[min_idx]
+                    y2, x2 = border_j[indices[min_idx]]
+                
+                return ((x1, y1), (x2, y2))
+                
+        return None
+    
+    # Generate all component pairs
+    component_pairs = list(combinations(range(len(component_borders)), 2))
+    
+    # Process component pairs in parallel
+    with Pool(processes=n_threads) as pool:
+        connections_list = pool.map(find_connection, component_pairs)
+    
     # Create a new image for the connections
     connections = np.zeros_like(mask)
     
-    # For each component, find the nearest other component within max_gap
-    for i in range(1, num_labels):  # Skip background (0)
-        # Get component mask
-        component_i = (labels == i)
-        
-        # Get border pixels
-        eroded = cv2.erode(component_i.astype(np.uint8), kernel_small, iterations=1)
-        border_i = np.logical_and(component_i, np.logical_not(eroded))
-        
-        # Get coordinates of border pixels
-        border_coords_i = np.column_stack(np.where(border_i))
-        
-        # Skip if no border pixels
-        if len(border_coords_i) == 0:
-            continue
-        
-        # For each other component
-        for j in range(i+1, num_labels):
-            # Get component mask
-            component_j = (labels == j)
-            
-            # Get border pixels
-            eroded = cv2.erode(component_j.astype(np.uint8), kernel_small, iterations=1)
-            border_j = np.logical_and(component_j, np.logical_not(eroded))
-            
-            # Get coordinates of border pixels
-            border_coords_j = np.column_stack(np.where(border_j))
-            
-            # Skip if no border pixels
-            if len(border_coords_j) == 0:
-                continue
-            
-            # Find closest pair of border pixels
-            min_dist = max_gap + 1
-            closest_pair = None
-            
-            # This can be slow for large images, consider optimizing
-            for y1, x1 in border_coords_i:
-                for y2, x2 in border_coords_j:
-                    dist = np.sqrt((y2-y1)**2 + (x2-x1)**2)
-                    if dist < min_dist and dist <= max_gap:
-                        min_dist = dist
-                        closest_pair = ((y1, x1), (y2, x2))
-            
-            # If found a pair within max_gap, draw a line to connect them
-            if closest_pair:
-                (y1, x1), (y2, x2) = closest_pair
-                cv2.line(connections, (x1, y1), (x2, y2), 255, 1)
+    # Draw connections
+    for conn in connections_list:
+        if conn is not None:
+            (x1, y1), (x2, y2) = conn
+            cv2.line(connections, (x1, y1), (x2, y2), 255, 1)
     
     # Combine original mask with new connections
     result = cv2.bitwise_or(mask_closed, connections)
