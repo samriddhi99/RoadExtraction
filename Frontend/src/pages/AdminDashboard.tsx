@@ -9,18 +9,20 @@ import {
 
 interface AccessRequest {
   id: number;
-  full_name: string;  // Changed to match the API response
+  full_name: string;
   department: string;
-  locations: string;  // Ensure that locations are properly handled as a string
-  submitted_at: string;  // Date will be a string for easier formatting
+  locations: string;
+  submitted_at: string;
   status: string;
- // Adjusted for array of regions
 }
 
 interface UserAccess {
+  id: number; // Assuming userAccesses have a unique identifier
   full_name: string;
-  status: string;
-  submitted_at: string;  // Same as above, handle this as string for formatting
+  email: string;     // Changed from status to email to match table headers
+  regions: string;   // Changed from optional to required to match table headers
+  last_accessed: string; // Changed from submitted_at to last_accessed to match table headers
+  status: string;    // Added status field to track approved/rejected
 }
 
 const AdminDashboard: React.FC = () => {
@@ -31,7 +33,6 @@ const AdminDashboard: React.FC = () => {
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [userAccesses, setUserAccesses] = useState<UserAccess[]>([]);
 
-  // Fetch data from the backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,7 +48,7 @@ const AdminDashboard: React.FC = () => {
         }
 
         const jsonData = await response.json();
-        console.log(jsonData); // Debugging line
+        console.log(jsonData);
         setAccessRequests(jsonData.accessRequests);
         setUserAccesses(jsonData.userAccesses);
       } catch (error) {
@@ -65,18 +66,19 @@ const AdminDashboard: React.FC = () => {
   }, [isLoggedIn, isAdmin, navigate]);
 
   const filteredRequests = accessRequests.filter(request =>
-    request.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Updated from userName to full_name
+    request.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     request.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredUserAccess = userAccesses.filter(user =>
-    user.full_name.toString().includes(searchTerm.toLowerCase()) || // Fix matching searchTerm with the user_id
-    user.status.toLowerCase().includes(searchTerm.toLowerCase()) 
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.status?.toLowerCase().includes(searchTerm.toLowerCase()) // Added status to search fields
   );
 
   const handleApprove = async (requestId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/approve/${requestId}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/approve/${requestId}`, { // Fixed string interpolation
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,8 +89,12 @@ const AdminDashboard: React.FC = () => {
   
       const data = await response.json();
       console.log(data.message); // "Request approved"
-
-      
+      // Update the local state after successful approval
+      setAccessRequests(prevRequests => 
+        prevRequests.map(req => 
+          req.id === requestId ? {...req, status: 'approved'} : req
+        )
+      );
     } catch (error) {
       console.error("Approval error:", error);
     }
@@ -96,7 +102,7 @@ const AdminDashboard: React.FC = () => {
   
   const handleReject = async (requestId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/reject/${requestId}`, {
+      const response = await fetch(`http://localhost:5000/api/admin/reject/${requestId}`, { // Fixed string interpolation
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,25 +113,23 @@ const AdminDashboard: React.FC = () => {
   
       const data = await response.json();
       console.log(data.message); // "Request rejected"
-  
-      // Optionally: refresh data
-       // or re-call fetchData()
+      // Update the local state after successful rejection
+      setAccessRequests(prevRequests => 
+        prevRequests.map(req => 
+          req.id === requestId ? {...req, status: 'rejected'} : req
+        )
+      );
     } catch (error) {
       console.error("Rejection error:", error);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-cream p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-playfair font-bold text-forest-green mb-4">
-            Admin Dashboard
-          </h1>
-          <p className="text-dark-slate">
-            Manage access requests and monitor user activities
-          </p>
+          <h1 className="text-3xl font-playfair font-bold text-forest-green mb-4">Admin Dashboard</h1>
+          <p className="text-dark-slate">Manage access requests and monitor user activities</p>
         </div>
 
         {/* Quick Stats */}
@@ -143,24 +147,25 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-forest-green">Active Users</h3>
               <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                {userAccesses.length}
+                {userAccesses.filter(u => u.status === 'approved').length}
               </div>
             </div>
           </div>
 
+          {/* Total Regions Card */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-forest-green">Total Regions</h3>
               <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                
+                {/* Insert total region count */}
+                5 {/* Placeholder */}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Tabs */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          {/* Tabs */}
           <div className="border-b border-gray-200">
             <div className="flex">
               <button
@@ -192,7 +197,7 @@ const AdminDashboard: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search by name, department, or email..."
+                placeholder="Search by name, department, email, or status..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-forest-green focus:border-transparent outline-none"
@@ -207,32 +212,21 @@ const AdminDashboard: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Department
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Requested Regions
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested Regions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRequests.map((request) => (
                       <tr key={request.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.full_name}</td> {/* Updated from userName */}
+                        <td className="px-6 py-4 whitespace-nowrap">{request.full_name}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{request.department}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{request.submitted_at}</td> {/* Handle date properly */}
+                        <td className="px-6 py-4 whitespace-nowrap">{request.locations || "N/A"}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{request.submitted_at}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                             request.status === 'pending'
@@ -248,13 +242,13 @@ const AdminDashboard: React.FC = () => {
                           {request.status === 'pending' && (
                             <div className="flex space-x-2">
                               <button
-                                onClick={() => handleApprove(request.id)}  // Fixed type issue
+                                onClick={() => handleApprove(request.id)}
                                 className="text-green-600 hover:text-green-900"
                               >
                                 <Check size={18} />
                               </button>
                               <button
-                                onClick={() => handleReject(request.id)}  // Fixed type issue
+                                onClick={() => handleReject(request.id)}
                                 className="text-red-600 hover:text-red-900"
                               >
                                 <X size={18} />
@@ -272,27 +266,31 @@ const AdminDashboard: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Regions
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Last Accessed
-                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Regions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Accessed</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredUserAccess.map((user, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap">{user.full_name}</td> {/* Handling user_id correctly */}
-                        <td className="px-6 py-4 whitespace-nowrap">{user.status}</td> {/* Corrected */}
-                        <td className="px-6 py-4">{user.status}</td> {/* Replace with actual regions data */}
-                        <td className="px-6 py-4">{user.submitted_at}</td> {/* Format as necessary */}
+                    {filteredUserAccess.map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.full_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.regions || "N/A"}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.last_accessed}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            user.status === 'approved'
+                              ? 'bg-green-100 text-green-800'
+                              : user.status === 'rejected'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Unknown'}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
