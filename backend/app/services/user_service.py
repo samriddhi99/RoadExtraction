@@ -78,24 +78,6 @@ def register_request(request_data):
             conn.close()
 
 
-def search_location(user_id, query):
-    try:
-        conn = connect_db()
-        cursor = conn.cursor(dictionary=True)
-
-        sql_query = process_query(query)
-        cursor.execute(sql_query)
-        return cursor.fetchall()
-
-    except Error as e:
-        print(f"[!] MySQL Error: {e}")
-        return []
-
-    finally:
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
-
 
 def get_notifications(user_id):
     try:
