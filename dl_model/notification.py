@@ -57,8 +57,8 @@ def add_significant_change_to_database(is_significant, change_percentage, image1
         conn = mysql.connector.connect(
             host="localhost",
             user="root",  # Update with your database username
-            password="",  # Update with your database password
-            database="road_extraction"  # Update with your database name
+            password="root",  # Update with your database password
+            database="change_detection"  # Update with your database name
         )
         
         cursor = conn.cursor()
