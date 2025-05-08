@@ -19,6 +19,7 @@ def request_access():
     try:
         print("[+] Request route hit")
         data = request.get_json()
+        print("[+] Request data:", data)
         register_request(data)
 
         return jsonify({'message': 'Request submitted successfully'}), 200

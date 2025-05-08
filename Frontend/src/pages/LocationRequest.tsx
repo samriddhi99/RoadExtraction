@@ -8,7 +8,7 @@ interface FormData {
   phoneNumber: string;
   department: string;
   designation: string;
-  locations: string[];
+  locations: string;
   justification: string;
   duration: 'temporary' | 'permanent';
   supervisorInfo: string;
@@ -26,7 +26,7 @@ const LocationRequest: React.FC = () => {
     phoneNumber: '',
     department: '',
     designation: '',
-    locations: [],
+    locations: '',
     justification: '',
     duration: 'temporary',
     supervisorInfo: '',
@@ -72,7 +72,7 @@ const LocationRequest: React.FC = () => {
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
     if (!formData.department.trim()) newErrors.department = 'Department is required';
     if (!formData.designation.trim()) newErrors.designation = 'Designation is required';
-    if (formData.locations.length === 0) newErrors.locations = 'Please select at least one location';
+    if (!formData.locations.trim()) newErrors.locations = 'Please select at least one location';
     if (!formData.justification.trim()) newErrors.justification = 'Justification is required';
     if (!formData.supervisorInfo.trim()) newErrors.supervisorInfo = "Supervisor's information is required";
     if (!formData.termsAgreed) newErrors.termsAgreed = 'You must agree to the Terms and Conditions';

@@ -84,7 +84,7 @@ def get_notifications(user_id):
         conn = connect_db()
         cursor = conn.cursor(dictionary=True)
 
-        query = "SELECT * FROM notifications WHERE id = %s"
+        query = "SELECT * FROM notifications WHERE user_id = %s"
         cursor.execute(query, (user_id,))
         return cursor.fetchall()
 
