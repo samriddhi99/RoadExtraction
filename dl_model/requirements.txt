@@ -1,8 +1,6 @@
-opencv-python
-numpy
-tensorflow
-geopandas
-scikit-image
-shapely
-matplotlib
-scikit-learn
+opencv-python==4.11.0
+numpy==1.26.4
+tensorflow==2.19.0
+shapely==2.1.0
+matplotlib==3.4.3
+scikit-learn==1.6.1
