@@ -22,7 +22,7 @@ const Index: React.FC = () => {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const response = await fetch('"http://localhost:5000/api/user/notifications');
+        const response = await fetch('http://localhost:5000/api/user/notifications');
         if (!response.ok) throw new Error('Failed to fetch alerts');
         const data: Alert[] = await response.json();
         setAlerts(data);
