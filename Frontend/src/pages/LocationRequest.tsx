@@ -73,6 +73,7 @@ const LocationRequest: React.FC = () => {
     if (!formData.department.trim()) newErrors.department = 'Department is required';
     if (!formData.designation.trim()) newErrors.designation = 'Designation is required';
     if (!formData.locations.trim()) newErrors.locations = 'Please select at least one location';
+    console.log(formData.locations);
     if (!formData.justification.trim()) newErrors.justification = 'Justification is required';
     if (!formData.supervisorInfo.trim()) newErrors.supervisorInfo = "Supervisor's information is required";
     if (!formData.termsAgreed) newErrors.termsAgreed = 'You must agree to the Terms and Conditions';

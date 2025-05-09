@@ -55,7 +55,7 @@ def register_request(request_data):
             request_data.get("phoneNumber"),
             request_data.get("department"),
             request_data.get("designation"),
-            ",".join(request_data.get("locations", [])),  # flatten list to comma-separated string
+            request_data.get("locations", []),  # flatten list to comma-separated string
             request_data.get("justification"),
             request_data.get("supervisorInfo"),
             request_data.get("additionalComments")
