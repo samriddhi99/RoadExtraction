@@ -1,7 +1,5 @@
 import mysql.connector
 from mysql.connector import Error
-from utils.nlp import process_query
-
 
 def connect_db():
     return mysql.connector.connect(
