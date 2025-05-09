@@ -79,13 +79,13 @@ def register_request(request_data):
 
 
 
-def get_notifications(user_id):
+def get_notifications():
     try:
         conn = connect_db()
         cursor = conn.cursor(dictionary=True)
 
-        query = "SELECT * FROM notifications WHERE user_id = %s"
-        cursor.execute(query, (user_id,))
+        query = "SELECT * FROM notifications;"
+        cursor.execute(query)
         return cursor.fetchall()
 
     except Error as e:

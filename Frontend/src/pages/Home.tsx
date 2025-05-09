@@ -177,13 +177,6 @@ const Home: React.FC = () => {
           </>
         ) : (
           <>
-            {/* Image Carousel - Guest view */}
-            <div className="mb-16">
-              <h2 className="text-3xl font-playfair font-bold text-forest-green mb-8 text-center">
-                Our Monitoring in Action
-              </h2>
-              <ImageCarousel />
-            </div>
 
             {/* Call to Action - Guest view */}
             <div className="bg-forest-green text-cream rounded-xl p-8 text-center">
