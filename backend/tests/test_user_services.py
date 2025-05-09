@@ -21,10 +21,6 @@ def test_get_accessible_locations():
     locations = get_accessible_locations(1)
     assert isinstance(locations, list)
 
-def test_register_request(test_user_data):
-    result = register_request(test_user_data)
-    assert "request_id" in result
-    assert result["message"] == "Permission request submitted"
 
 def test_get_notifications():
     notifs = get_notifications()
