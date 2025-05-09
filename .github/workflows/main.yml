@@ -1,0 +1,32 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-frontend-tests:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: Frontend  # change this if your folder name is different
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # or whatever version you're using
+
+      - name: Install dependencies
+        run: |
+          npm install -D vitest jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
+          npm install -D @types/jsdom
+
+      - name: Run frontend tests
+        run: npx vitest run
