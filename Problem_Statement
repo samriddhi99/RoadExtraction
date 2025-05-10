@@ -1,0 +1,11 @@
+Automatic Road Extraction and alert generation for new roads
+
+The continuous and accurate mapping of road infrastructure is critical not only for urban development and planning but also for national security,
+especially in sensitive border regions. In many cases, adversaries may construct roads or temporary pathways in remote or disputed areas to facilitate
+unauthorized access, logistics movement, or military mobilization, often going unnoticed until significant activity has already taken place. 
+
+This project aims to develop an automated system for road extraction from high-resolution satellite imagery, leveraging deep learning techniques.
+The system will not only detect and map existing roads but also generate alerts for new road constructions, with special focus on strategic border areas.
+By comparing historical and recent satellite images, it will flag regions showing signs of new roads or pathways and present them via an intuitive interface 
+for validation and further action by authorities.
+
